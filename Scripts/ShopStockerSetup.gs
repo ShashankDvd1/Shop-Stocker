@@ -328,7 +328,7 @@ function createDashboardSheet(ss) {
   sheet.getRange("B4:B8").setFontSize(10);
   
   // Add border
-  sheet.getRange("B3:C8").setBorder(true, true, true, true, false, false, "#1a237e", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange("B3:C8").setBorder(true, true, true, true, false, false, "#1a237e", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
   
   // ---- SECTION 2: TOP SELLERS (Right side) ----
   sheet.getRange("E3").setValue("🏆 टॉप 10 उत्पाद — Top 10 Products");
@@ -344,7 +344,7 @@ function createDashboardSheet(ss) {
     '=IFERROR(QUERY(\'बिक्री\'!B$2:C$500, "SELECT B, SUM(C) WHERE B <>\'\' GROUP BY B ORDER BY SUM(C) DESC LIMIT 10 LABEL SUM(C) \'\'"), "No sales yet")'
   );
   
-  sheet.getRange("E3:F14").setBorder(true, true, true, true, false, false, "#2e7d32", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange("E3:F14").setBorder(true, true, true, true, false, false, "#2e7d32", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
   
   // ---- SECTION 3: STOCK ALERTS ----
   const stockStartRow = 11;
@@ -361,7 +361,7 @@ function createDashboardSheet(ss) {
     '=IFERROR(QUERY(\'उत्पाद सूची\'!A$2:J$300, "SELECT A, I WHERE I <= F ORDER BY I ASC", 0), "All stock OK! ✅")'
   );
   
-  sheet.getRange("B" + stockStartRow + ":C" + (stockStartRow + 15)).setBorder(true, true, true, true, false, false, "#e65100", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange("B" + stockStartRow + ":C" + (stockStartRow + 15)).setBorder(true, true, true, true, false, false, "#e65100", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
   
   // ---- SECTION 4: MONTHLY PROFIT ----
   const monthlyStartRow = 28;
@@ -390,7 +390,7 @@ function createDashboardSheet(ss) {
     ).setNumberFormat("0.0\"%\"");
   }
   
-  sheet.getRange("B" + monthlyStartRow + ":F" + (monthlyStartRow + 14)).setBorder(true, true, true, true, false, false, "#1a237e", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange("B" + monthlyStartRow + ":F" + (monthlyStartRow + 14)).setBorder(true, true, true, true, false, false, "#1a237e", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
   
   // ---- SECTION 5: ALL STOCK LEVELS ----
   const allStockRow = 17;
@@ -407,7 +407,7 @@ function createDashboardSheet(ss) {
     '=IFERROR(QUERY(\'उत्पाद सूची\'!A$2:I$300, "SELECT A, I WHERE A <>\'\' ORDER BY I ASC", 0), "No products yet")'
   );
   
-  sheet.getRange("E" + allStockRow + ":F" + (allStockRow + 150)).setBorder(true, true, true, true, false, false, "#00695c", SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange("E" + allStockRow + ":F" + (allStockRow + 150)).setBorder(true, true, true, true, false, false, "#00695c", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
   
   // Freeze title row
   sheet.setFrozenRows(1);
