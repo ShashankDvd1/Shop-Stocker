@@ -36,6 +36,9 @@ function setupShopStocker() {
   // Load sample products
   loadSampleProducts(productMaster);
   
+  // Prefill Stock In Log with all product names (leave Quantity blank for shopkeeper)
+  prefillStockInProducts(stockInLog, productMaster);
+  
   // Set up data validation (dropdowns) — must be after products are loaded
   setupDataValidation(ss, productMaster, salesLog, stockInLog);
   
@@ -643,6 +646,23 @@ function loadSampleProducts(sheet) {
       sheet.getRange(i, 1, 1, 4).setBackground("#e8eaf6");
     }
   }
+}
+
+// ============================================================
+// HELPER: Prefill Stock In Log with Product Names
+// ============================================================
+function prefillStockInProducts(stockInLog, productMaster) {
+  const lastRow = productMaster.getLastRow();
+  if (lastRow < 2) return;
+  
+  // Fetch product names from Product Master
+  const productNames = productMaster.getRange(2, 1, lastRow - 1, 1).getValues();
+  const today = new Date();
+  
+  const initialStockInRows = productNames.map(row => [today, row[0], ""]);
+  
+  // Write Date, Product Name, and leave Quantity blank for shopkeeper
+  stockInLog.getRange(2, 1, initialStockInRows.length, 3).setValues(initialStockInRows);
 }
 
 // ============================================================
