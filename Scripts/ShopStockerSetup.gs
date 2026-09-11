@@ -159,18 +159,12 @@ function createSalesLogSheet(ss) {
   sheet.setColumnWidth(7, 120);  // Total Cost
   sheet.setColumnWidth(8, 120);  // Profit
   
-  // Add formulas for rows 2–500 in batch (for maximum speed)
-  const salesFormulas = [];
-  for (let i = 2; i <= 500; i++) {
-    salesFormulas.push([
-      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:D,4,FALSE))`,
-      `=IF(B${i}="","",C${i}*D${i})`,
-      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:C,3,FALSE))`,
-      `=IF(B${i}="","",C${i}*F${i})`,
-      `=IF(B${i}="","",E${i}-G${i})`
-    ]);
-  }
-  sheet.getRange(2, 4, 499, 5).setFormulas(salesFormulas);
+  // Single ARRAYFORMULAs in Row 2 for maximum speed
+  sheet.getRange("D2").setFormula("=ARRAYFORMULA(IF(B2:B500=\"\",\"\",IFERROR(VLOOKUP(B2:B500,'उत्पाद सूची'!A:D,4,FALSE),0)))");
+  sheet.getRange("E2").setFormula("=ARRAYFORMULA(IF(B2:B500=\"\",\"\",C2:C500*D2:D500))");
+  sheet.getRange("F2").setFormula("=ARRAYFORMULA(IF(B2:B500=\"\",\"\",IFERROR(VLOOKUP(B2:B500,'उत्पाद सूची'!A:C,3,FALSE),0)))");
+  sheet.getRange("G2").setFormula("=ARRAYFORMULA(IF(B2:B500=\"\",\"\",C2:C500*F2:F500))");
+  sheet.getRange("H2").setFormula("=ARRAYFORMULA(IF(B2:B500=\"\",\"\",E2:E500-G2:G500))");
   
   // Grey out formula columns (D-H)
   sheet.getRange("D2:H500").setBackground("#f5f5f5");
@@ -229,15 +223,9 @@ function createStockInLogSheet(ss) {
   sheet.setColumnWidth(4, 120);  // Cost Price
   sheet.setColumnWidth(5, 120);  // Total Cost
   
-  // Add formulas for rows 2–500 in batch (for maximum speed)
-  const stockInFormulas = [];
-  for (let i = 2; i <= 500; i++) {
-    stockInFormulas.push([
-      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:C,3,FALSE))`,
-      `=IF(B${i}="","",C${i}*D${i})`
-    ]);
-  }
-  sheet.getRange(2, 4, 499, 2).setFormulas(stockInFormulas);
+  // Single ARRAYFORMULAs in Row 2 for maximum speed
+  sheet.getRange("D2").setFormula("=ARRAYFORMULA(IF(B2:B500=\"\",\"\",IFERROR(VLOOKUP(B2:B500,'उत्पाद सूची'!A:C,3,FALSE),0)))");
+  sheet.getRange("E2").setFormula("=ARRAYFORMULA(IF(B2:B500=\"\",\"\",C2:C500*D2:D500))");
   
   // Grey out formula columns (D-E)
   sheet.getRange("D2:E500").setBackground("#f5f5f5");
@@ -587,19 +575,12 @@ function loadSampleProducts(sheet) {
   dataRange.setValues(products);
   
   // Add formulas for each product row in batch (for maximum speed)
-  const col5Formulas = [];
-  const col7To10Formulas = [];
-  for (let i = 2; i <= products.length + 1; i++) {
-    col5Formulas.push([`=IF(A${i}="","",D${i}-C${i})`]);
-    col7To10Formulas.push([
-      `=IF(A${i}="","",SUMIF('माल आवक'!B:B, A${i}, 'माल आवक'!C:C))`,
-      `=IF(A${i}="","",SUMIF('बिक्री'!B:B, A${i}, 'बिक्री'!C:C))`,
-      `=IF(A${i}="","",G${i}-H${i})`,
-      `=IF(A${i}="","",IF(I${i}<=0,"❌ Out of Stock",IF(I${i}<=F${i},"⚠️ Low Stock","✅ OK")))`
-    ]);
-  }
-  sheet.getRange(2, 5, products.length, 1).setFormulas(col5Formulas);
-  sheet.getRange(2, 7, products.length, 4).setFormulas(col7To10Formulas);
+  // Single ARRAYFORMULAs in Row 2 for maximum speed
+  sheet.getRange("E2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",D2:D-C2:C))");
+  sheet.getRange("G2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",SUMIF('माल आवक'!B:B,A2:A,'माल आवक'!C:C)))");
+  sheet.getRange("H2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",SUMIF('बिक्री'!B:B,A2:A,'बिक्री'!C:C)))");
+  sheet.getRange("I2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",G2:G-H2:H))");
+  sheet.getRange("J2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",IF(I2:I<=0,\"❌ Out of Stock\",IF(I2:I<=F2:F,\"⚠️ Low Stock\",\"✅ OK\"))))");
   
   // Grey out formula columns
   sheet.getRange(2, 5, products.length, 1).setBackground("#f5f5f5");  // Profit/Unit
