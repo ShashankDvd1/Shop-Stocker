@@ -50,17 +50,7 @@ function setupShopStocker() {
     ss.deleteSheet(defaultSheet);
   }
   
-  // Reorder sheets
-  productMaster.activate();
-  ss.moveActiveSheet(1);
-  salesLog.activate();
-  ss.moveActiveSheet(2);
-  stockInLog.activate();
-  ss.moveActiveSheet(3);
-  dashboard.activate();
-  ss.moveActiveSheet(4);
-  
-  // Set Sales Log as the default view (most used)
+  // Set Sales Log as default active tab
   salesLog.activate();
   
   SpreadsheetApp.getUi().alert(
@@ -618,12 +608,13 @@ function loadSampleProducts(sheet) {
   // Sort by Category, then Product Name
   sheet.getRange(2, 1, products.length, 10).sort([{column: 2, ascending: true}, {column: 1, ascending: true}]);
   
-  // Add alternating row colors
+  // Add alternating row colors in batch (for maximum speed)
+  const backgrounds = [];
   for (let i = 2; i <= products.length + 1; i++) {
-    if (i % 2 === 0) {
-      sheet.getRange(i, 1, 1, 4).setBackground("#e8eaf6");
-    }
+    const bg = (i % 2 === 0) ? "#e8eaf6" : "#ffffff";
+    backgrounds.push([bg, bg, bg, bg]);
   }
+  sheet.getRange(2, 1, products.length, 4).setBackgrounds(backgrounds);
 }
 
 // ============================================================
