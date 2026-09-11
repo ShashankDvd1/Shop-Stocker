@@ -169,15 +169,18 @@ function createSalesLogSheet(ss) {
   sheet.setColumnWidth(7, 120);  // Total Cost
   sheet.setColumnWidth(8, 120);  // Profit
   
-  // Add formulas for rows 2–500
+  // Add formulas for rows 2–500 in batch (for maximum speed)
+  const salesFormulas = [];
   for (let i = 2; i <= 500; i++) {
-    // VLOOKUP for Selling Price
-    sheet.getRange(i, 4).setFormula(
-      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:D,4,FALSE))`
-    );
-    // Total Amount = Qty × Selling Price
-    sheet.getRange(i, 5).setFormula(
-      `=IF(B${i}="","",C${i}*D${i})`
+    salesFormulas.push([
+      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:D,4,FALSE))`,
+      `=IF(B${i}="","",C${i}*D${i})`,
+      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:C,3,FALSE))`,
+      `=IF(B${i}="","",C${i}*F${i})`,
+      `=IF(B${i}="","",E${i}-G${i})`
+    ]);
+  }
+  sheet.getRange(2, 4, 499, 5).setFormulas(salesFormulas);","",C${i}*D${i})`
     );
     // VLOOKUP for Cost Price
     sheet.getRange(i, 6).setFormula(
@@ -250,15 +253,15 @@ function createStockInLogSheet(ss) {
   sheet.setColumnWidth(4, 120);  // Cost Price
   sheet.setColumnWidth(5, 120);  // Total Cost
   
-  // Add formulas for rows 2–500
+  // Add formulas for rows 2–500 in batch (for maximum speed)
+  const stockInFormulas = [];
   for (let i = 2; i <= 500; i++) {
-    // VLOOKUP for Cost Price
-    sheet.getRange(i, 4).setFormula(
-      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:C,3,FALSE))`
-    );
-    // Total Cost = Qty × Cost Price
-    sheet.getRange(i, 5).setFormula(
+    stockInFormulas.push([
+      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:C,3,FALSE))`,
       `=IF(B${i}="","",C${i}*D${i})`
+    ]);
+  }
+  sheet.getRange(2, 4, 499, 2).setFormulas(stockInFormulas);","",C${i}*D${i})`
     );
   }
   
@@ -609,29 +612,20 @@ function loadSampleProducts(sheet) {
   const dataRange = sheet.getRange(2, 1, products.length, 5);
   dataRange.setValues(products);
   
-  // Add formulas for each product row
+  // Add formulas for each product row in batch (for maximum speed)
+  const col5Formulas = [];
+  const col7To10Formulas = [];
   for (let i = 2; i <= products.length + 1; i++) {
-    // Profit per unit = MRP - Cost
-    sheet.getRange(i, 5).setFormula(`=IF(A${i}="","",D${i}-C${i})`);
-    
-    // Total Stocked In = SUMIF from Stock In Log
-    sheet.getRange(i, 7).setFormula(
-      `=IF(A${i}="","",SUMIF('माल आवक'!B:B, A${i}, 'माल आवक'!C:C))`
-    );
-    
-    // Total Sold = SUMIF from Sales Log
-    sheet.getRange(i, 8).setFormula(
-      `=IF(A${i}="","",SUMIF('बिक्री'!B:B, A${i}, 'बिक्री'!C:C))`
-    );
-    
-    // Current Stock = Stocked In - Sold
-    sheet.getRange(i, 9).setFormula(`=IF(A${i}="","",G${i}-H${i})`);
-    
-    // Status
-    sheet.getRange(i, 10).setFormula(
+    col5Formulas.push([`=IF(A${i}="","",D${i}-C${i})`]);
+    col7To10Formulas.push([
+      `=IF(A${i}="","",SUMIF('माल आवक'!B:B, A${i}, 'माल आवक'!C:C))`,
+      `=IF(A${i}="","",SUMIF('बिक्री'!B:B, A${i}, 'बिक्री'!C:C))`,
+      `=IF(A${i}="","",G${i}-H${i})`,
       `=IF(A${i}="","",IF(I${i}<=0,"❌ Out of Stock",IF(I${i}<=F${i},"⚠️ Low Stock","✅ OK")))`
-    );
+    ]);
   }
+  sheet.getRange(2, 5, products.length, 1).setFormulas(col5Formulas);
+  sheet.getRange(2, 7, products.length, 4).setFormulas(col7To10Formulas);
   
   // Grey out formula columns
   sheet.getRange(2, 5, products.length, 1).setBackground("#f5f5f5");  // Profit/Unit
@@ -876,21 +870,21 @@ function syncCatalog() {
     const appendRow = lastRow + 1;
     productMaster.getRange(appendRow, 1, addedCount, 5).setValues(newProductsData);
     
-    // Auto-fill formulas for new rows
+    // Auto-fill formulas for new rows in batch
+    const syncCol5 = [];
+    const syncCol7To11 = [];
     for (let r = appendRow; r < appendRow + addedCount; r++) {
-      // Profit per unit = MRP - Cost
-      productMaster.getRange(r, 5).setFormula(`=IF(A${r}="","",D${r}-C${r})`);
-      // Total Stocked In = SUMIF from Stock In Log
-      productMaster.getRange(r, 7).setFormula(`=IF(A${r}="","",SUMIF('माल आवक'!B:B,A${r},'माल आवक'!C:C))`);
-      // Total Sold = SUMIF from Sales Log
-      productMaster.getRange(r, 8).setFormula(`=IF(A${r}="","",SUMIF('बिक्री'!B:B,A${r},'बिक्री'!C:C))`);
-      // Current Stock = Initial Stock (0) + Stocked In - Sold
-      productMaster.getRange(r, 9).setFormula(`=IF(A${r}="","",0+G${r}-H${r})`);
-      // Stock Status
-      productMaster.getRange(r, 10).setFormula(`=IF(A${r}="","",IF(I${r}<=0,"❌ Out of Stock",IF(I${r}<=E${r},"⚠️ Low Stock","✅ OK")))`);
-      // Last Restocked
-      productMaster.getRange(r, 11).setFormula(`=IF(A${r}="","",IFERROR(INDEX(SORT(FILTER('माल आवक'!A:A,'माल आवक'!B:B=A${r}),1,FALSE),1),"Never"))`);
+      syncCol5.push([`=IF(A${r}="","",D${r}-C${r})`]);
+      syncCol7To11.push([
+        `=IF(A${r}="","",SUMIF('माल आवक'!B:B,A${r},'माल आवक'!C:C))`,
+        `=IF(A${r}="","",SUMIF('बिक्री'!B:B,A${r},'बिक्री'!C:C))`,
+        `=IF(A${r}="","",0+G${r}-H${r})`,
+        `=IF(A${r}="","",IF(I${r}<=0,"❌ Out of Stock",IF(I${r}<=E${r},"⚠️ Low Stock","✅ OK")))`,
+        `=IF(A${r}="","",IFERROR(INDEX(SORT(FILTER('माल आवक'!A:A,'माल आवक'!B:B=A${r}),1,FALSE),1),"Never"))`
+      ]);
     }
+    productMaster.getRange(appendRow, 5, addedCount, 1).setFormulas(syncCol5);
+    productMaster.getRange(appendRow, 7, addedCount, 5).setFormulas(syncCol7To11);
     
     // Apply formatting to new cells (currency)
     productMaster.getRange(appendRow, 3, addedCount, 3).setNumberFormat("[$₹] #,##0.00");
