@@ -180,21 +180,7 @@ function createSalesLogSheet(ss) {
       `=IF(B${i}="","",E${i}-G${i})`
     ]);
   }
-  sheet.getRange(2, 4, 499, 5).setFormulas(salesFormulas);","",C${i}*D${i})`
-    );
-    // VLOOKUP for Cost Price
-    sheet.getRange(i, 6).setFormula(
-      `=IF(B${i}="","",VLOOKUP(B${i},'उत्पाद सूची'!A:C,3,FALSE))`
-    );
-    // Total Cost = Qty × Cost Price
-    sheet.getRange(i, 7).setFormula(
-      `=IF(B${i}="","",C${i}*F${i})`
-    );
-    // Profit = Total Amount - Total Cost
-    sheet.getRange(i, 8).setFormula(
-      `=IF(B${i}="","",E${i}-G${i})`
-    );
-  }
+  sheet.getRange(2, 4, 499, 5).setFormulas(salesFormulas);
   
   // Grey out formula columns (D-H)
   sheet.getRange("D2:H500").setBackground("#f5f5f5");
@@ -261,9 +247,7 @@ function createStockInLogSheet(ss) {
       `=IF(B${i}="","",C${i}*D${i})`
     ]);
   }
-  sheet.getRange(2, 4, 499, 2).setFormulas(stockInFormulas);","",C${i}*D${i})`
-    );
-  }
+  sheet.getRange(2, 4, 499, 2).setFormulas(stockInFormulas);
   
   // Grey out formula columns (D-E)
   sheet.getRange("D2:E500").setBackground("#f5f5f5");
