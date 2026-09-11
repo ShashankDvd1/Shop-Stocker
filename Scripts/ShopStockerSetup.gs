@@ -374,21 +374,21 @@ function createDashboardSheet(ss) {
   sheet.getRange(monthlyStartRow + 1, 2, 1, 5).setValues(monthHeaders)
        .setFontWeight("bold").setBackground("#c5cae9").setHorizontalAlignment("center");
   
-  // Monthly summary using QUERY
+  // Monthly summary using QUERY with ARRAYFORMULA
   sheet.getRange("B" + (monthlyStartRow + 2)).setFormula(
-    '=IFERROR(QUERY({EOMONTH(\'बिक्री\'!A$2:A$500,0), \'बिक्री\'!E$2:E$500, \'बिक्री\'!G$2:G$500, \'बिक्री\'!H$2:H$500}, "SELECT Col1, SUM(Col2), SUM(Col3), SUM(Col4) WHERE Col1 IS NOT NULL GROUP BY Col1 ORDER BY Col1 DESC LABEL Col1 \'\', SUM(Col2) \'\', SUM(Col3) \'\', SUM(Col4) \'\'", 0), "No data yet")'
+    '=IFERROR(ARRAYFORMULA(QUERY({EOMONTH(\'बिक्री\'!A$2:A$500,0), \'बिक्री\'!E$2:E$500, \'बिक्री\'!G$2:G$500, \'बिक्री\'!H$2:H$500}, "SELECT Col1, SUM(Col2), SUM(Col3), SUM(Col4) WHERE Col1 IS NOT NULL GROUP BY Col1 ORDER BY Col1 DESC LABEL Col1 \'\', SUM(Col2) \'\', SUM(Col3) \'\', SUM(Col4) \'\'", 0)), "No data yet")'
   );
   
   // Format monthly dates and currency
   sheet.getRange("B" + (monthlyStartRow + 2) + ":B" + (monthlyStartRow + 14)).setNumberFormat("MMM yyyy");
   sheet.getRange("C" + (monthlyStartRow + 2) + ":E" + (monthlyStartRow + 14)).setNumberFormat("₹#,##0.00");
   
-  // Profit margin % formula for rows
+  // Profit margin % formula for rows in batch
+  const marginFormulas = [];
   for (let i = monthlyStartRow + 2; i <= monthlyStartRow + 14; i++) {
-    sheet.getRange("F" + i).setFormula(
-      `=IF(C${i}="","",IFERROR(E${i}/C${i}*100, 0))`
-    ).setNumberFormat("0.0\"%\"");
+    marginFormulas.push([`=IF(C${i}="","",IFERROR(E${i}/C${i}*100, 0))`]);
   }
+  sheet.getRange("F" + (monthlyStartRow + 2) + ":F" + (monthlyStartRow + 14)).setFormulas(marginFormulas).setNumberFormat("0.0\"%\"");
   
   sheet.getRange("B" + monthlyStartRow + ":F" + (monthlyStartRow + 14)).setBorder(true, true, true, true, false, false, "#1a237e", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
   
