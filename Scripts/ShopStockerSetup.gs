@@ -570,33 +570,69 @@ function loadSampleProducts(sheet) {
     ["Amul Honey 250g Bottle", "Bakery, Protein & Frozen Snacks (बेकरी & स्नेक्स)", 80, 100, 5],
   ];
   
-  // 1. Sort products by Category then Product Name in memory BEFORE writing
-  products.sort((a, b) => a[1].localeCompare(b[1]) || a[0].localeCompare(b[0]));
-  
-  // 2. Format products into 6 columns: [Name, Category, Cost, MRP, "", MinStock]
-  const formattedProducts = products.map(p => [p[0], p[1], p[2], p[3], "", p[4]]);
+  // Category styling configuration
+  const categories = [
+    { name: "Milk (दूध)", icon: "🥛", color: "#1a237e" },
+    { name: "Butter & Spreads (मक्खन)", icon: "🧈", color: "#f57f17" },
+    { name: "Cheese (चीज़)", icon: "🧀", color: "#fbc02d" },
+    { name: "Paneer & Khoya (पनीर)", icon: "🧱", color: "#00695c" },
+    { name: "Ghee (घी)", icon: "🛢️", color: "#e65100" },
+    { name: "Curd, Lassi & Chhas (दही & छाछ)", icon: "🥣", color: "#00838f" },
+    { name: "Ice Cream & Frozen Desserts (आइसक्रीम)", icon: "🍦", color: "#c2185b" },
+    { name: "Beverages & Shakes (पेय & शेक)", icon: "🥤", color: "#6a1b9a" },
+    { name: "Chocolates (चॉकलेट)", icon: "🍫", color: "#4e342e" },
+    { name: "Sweets & Desserts (मिठाई)", icon: "🍬", color: "#c62828" },
+    { name: "Milk Powder & Condensed Milk (पाउडर & कंडेंस्ड)", icon: "🥛", color: "#1565c0" },
+    { name: "Bakery, Protein & Frozen Snacks (बेकरी & स्नेक्स)", icon: "🍿", color: "#37474f" }
+  ];
 
-  // 3. Write data to columns A:F starting from row 2
-  sheet.getRange(2, 1, formattedProducts.length, 6).setValues(formattedProducts);
+  let allRows = [];
+  let headerRowConfigs = [];
+
+  categories.forEach(cat => {
+    const catProducts = products
+      .filter(p => p[1] === cat.name)
+      .sort((a, b) => a[0].localeCompare(b[0]));
+
+    if (catProducts.length > 0) {
+      // 1. Add Category Header Banner
+      const headerTitle = `${cat.icon}  ${cat.name.toUpperCase()}  (${catProducts.length} items)`;
+      allRows.push([headerTitle, "", "", "", "", ""]);
+      headerRowConfigs.push({ rowIdx: allRows.length + 1, color: cat.color });
+
+      // 2. Add Product Rows
+      catProducts.forEach(p => {
+        allRows.push([p[0], p[1], p[2], p[3], "", p[4]]);
+      });
+    }
+  });
+
+  const totalRowCount = allRows.length;
+
+  // Write all rows to columns A:F
+  sheet.getRange(2, 1, totalRowCount, 6).setValues(allRows);
+
+  // Style Category Header Banners
+  headerRowConfigs.forEach(cfg => {
+    const headerRange = sheet.getRange(cfg.rowIdx, 1, 1, 10);
+    headerRange.merge()
+               .setBackground(cfg.color)
+               .setFontColor("#ffffff")
+               .setFontWeight("bold")
+               .setFontSize(11)
+               .setVerticalAlignment("middle");
+    sheet.setRowHeight(cfg.rowIdx, 32);
+  });
+
+  // Single ARRAYFORMULAs in Row 2 (uses C2:C="" guard to skip Category Banners!)
+  sheet.getRange("E2").setFormula("=ARRAYFORMULA(IF(C2:C=\"\",\"\",D2:D-C2:C))");
+  sheet.getRange("G2").setFormula("=ARRAYFORMULA(IF(C2:C=\"\",\"\",SUMIF('माल आवक'!B:B,A2:A,'माल आवक'!C:C)))");
+  sheet.getRange("H2").setFormula("=ARRAYFORMULA(IF(C2:C=\"\",\"\",SUMIF('बिक्री'!B:B,A2:A,'बिक्री'!C:C)))");
+  sheet.getRange("I2").setFormula("=ARRAYFORMULA(IF(C2:C=\"\",\"\",G2:G-H2:H))");
+  sheet.getRange("J2").setFormula("=ARRAYFORMULA(IF(C2:C=\"\",\"\",IF(I2:I<=0,\"❌ Out of Stock\",IF(I2:I<=F2:F,\"⚠️ Low Stock\",\"✅ OK\"))))");
   
-  // 4. Single ARRAYFORMULAs in Row 2 for maximum speed
-  sheet.getRange("E2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",D2:D-C2:C))");
-  sheet.getRange("G2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",SUMIF('माल आवक'!B:B,A2:A,'माल आवक'!C:C)))");
-  sheet.getRange("H2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",SUMIF('बिक्री'!B:B,A2:A,'बिक्री'!C:C)))");
-  sheet.getRange("I2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",G2:G-H2:H))");
-  sheet.getRange("J2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",IF(I2:I<=0,\"❌ Out of Stock\",IF(I2:I<=F2:F,\"⚠️ Low Stock\",\"✅ OK\"))))");
-  
-  // Grey out formula columns
-  sheet.getRange(2, 5, products.length, 1).setBackground("#f5f5f5");  // Profit/Unit
-  sheet.getRange(2, 7, products.length, 4).setBackground("#f5f5f5");  // Stocked In, Sold, Current, Status
-  
-  // Add alternating row colors in batch (for maximum speed)
-  const backgrounds = [];
-  for (let i = 2; i <= products.length + 1; i++) {
-    const bg = (i % 2 === 0) ? "#e8eaf6" : "#ffffff";
-    backgrounds.push([bg, bg, bg, bg]);
-  }
-  sheet.getRange(2, 1, products.length, 4).setBackgrounds(backgrounds);
+  // Format price columns
+  sheet.getRange("C2:E" + (totalRowCount + 1)).setNumberFormat("₹#,##0.00");
 }
 
 // ============================================================
@@ -606,14 +642,17 @@ function prefillStockInProducts(stockInLog, productMaster) {
   const lastRow = productMaster.getLastRow();
   if (lastRow < 2) return;
   
-  // Fetch product names from Product Master
-  const productNames = productMaster.getRange(2, 1, lastRow - 1, 1).getValues();
+  // Fetch products from Product Master, filtering out Category Header Banners (where Cost Price Col C is empty)
+  const productData = productMaster.getRange(2, 1, lastRow - 1, 3).getValues();
   const today = new Date();
   
-  const initialStockInRows = productNames.map(row => [today, row[0], ""]);
+  const initialStockInRows = productData
+    .filter(row => row[2] !== "" && typeof row[2] === "number")
+    .map(row => [today, row[0], ""]);
   
-  // Write Date, Product Name, and leave Quantity blank for shopkeeper
-  stockInLog.getRange(2, 1, initialStockInRows.length, 3).setValues(initialStockInRows);
+  if (initialStockInRows.length > 0) {
+    stockInLog.getRange(2, 1, initialStockInRows.length, 3).setValues(initialStockInRows);
+  }
 }
 
 // ============================================================
