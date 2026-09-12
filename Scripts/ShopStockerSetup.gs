@@ -570,12 +570,16 @@ function loadSampleProducts(sheet) {
     ["Amul Honey 250g Bottle", "Bakery, Protein & Frozen Snacks (बेकरी & स्नेक्स)", 80, 100, 5],
   ];
   
-  // Write product data starting from row 2
-  const dataRange = sheet.getRange(2, 1, products.length, 5);
-  dataRange.setValues(products);
+  // 1. Sort products by Category then Product Name in memory BEFORE writing
+  products.sort((a, b) => a[1].localeCompare(b[1]) || a[0].localeCompare(b[0]));
   
-  // Add formulas for each product row in batch (for maximum speed)
-  // Single ARRAYFORMULAs in Row 2 for maximum speed
+  // 2. Format products into 6 columns: [Name, Category, Cost, MRP, "", MinStock]
+  const formattedProducts = products.map(p => [p[0], p[1], p[2], p[3], "", p[4]]);
+
+  // 3. Write data to columns A:F starting from row 2
+  sheet.getRange(2, 1, formattedProducts.length, 6).setValues(formattedProducts);
+  
+  // 4. Single ARRAYFORMULAs in Row 2 for maximum speed
   sheet.getRange("E2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",D2:D-C2:C))");
   sheet.getRange("G2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",SUMIF('माल आवक'!B:B,A2:A,'माल आवक'!C:C)))");
   sheet.getRange("H2").setFormula("=ARRAYFORMULA(IF(A2:A=\"\",\"\",SUMIF('बिक्री'!B:B,A2:A,'बिक्री'!C:C)))");
@@ -585,9 +589,6 @@ function loadSampleProducts(sheet) {
   // Grey out formula columns
   sheet.getRange(2, 5, products.length, 1).setBackground("#f5f5f5");  // Profit/Unit
   sheet.getRange(2, 7, products.length, 4).setBackground("#f5f5f5");  // Stocked In, Sold, Current, Status
-  
-  // Sort by Category, then Product Name
-  sheet.getRange(2, 1, products.length, 10).sort([{column: 2, ascending: true}, {column: 1, ascending: true}]);
   
   // Add alternating row colors in batch (for maximum speed)
   const backgrounds = [];
